@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Special Valentine's Surprise ❤️</title>
+    <link rel="stylesheet" href="css/styles.css">
+
+    <!-- MediaPipe Hands -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
+</head>
+<body>
+    <!-- Game Screen -->
+    <div id="game-screen" class="screen active">
+        <div class="container">
+            <h1 class="title">Let's Play a Game ❤️</h1>
+            <p class="subtitle">Win to unlock something special...</p>
+            
+            <div class="tic-tac-toe-board">
+                <div class="cell" data-index="0"></div>
+                <div class="cell" data-index="1"></div>
+                <div class="cell" data-index="2"></div>
+                <div class="cell" data-index="3"></div>
+                <div class="cell" data-index="4"></div>
+                <div class="cell" data-index="5"></div>
+                <div class="cell" data-index="6"></div>
+                <div class="cell" data-index="7"></div>
+                <div class="cell" data-index="8"></div>
+            </div>
+            
+            <button id="reset-btn" class="btn">Reset Game</button>
+            <div id="game-status" class="status"></div>
+        </div>
+    </div>
+
+    <!-- Transition Screen -->
+    <div id="transition-screen" class="screen">
+        <div class="transition-container">
+            <div class="heart-animation">
+                <div class="heart">❤️</div>
+            </div>
+            <h2 class="transition-title">You Won! 🎉</h2>
+            <p class="transition-message">You've unlocked something special...</p>
+            <button id="unlock-btn" class="btn btn-primary">Open Your Gift 🎁</button>
+        </div>
+    </div>
+
+    <!-- Gallery Screen -->
+    <div id="gallery-screen" class="screen">
+        <div class="gallery-container">
+            <!-- Camera Permission Notice -->
+            <div id="camera-notice" class="camera-notice">
+                <div class="notice-content">
+                    <h3>✨ Enable Hand Gestures ✨</h3>
+                    <p>Allow camera access to control the gallery with hand gestures!</p>
+                    <button id="enable-camera-btn" class="btn btn-primary">Enable Camera</button>
+                    <button id="skip-camera-btn" class="btn btn-secondary">Skip (Use Keyboard)</button>
+                </div>
+            </div>
+
+            <!-- Gallery Header -->
+            <div class="gallery-header">
+                <h2>Our Journey Together 💕</h2>
+                <div id="gesture-indicator" class="gesture-indicator hidden">
+                    <span class="indicator-dot"></span>
+                    <span class="indicator-text">Gesture Active</span>
+                </div>
+            </div>
+
+            <!-- Media Display -->
+            <div class="media-container">
+                <button class="nav-btn nav-prev" id="prev-btn">‹</button>
+                
+                <div class="media-wrapper">
+                    <div id="media-display" class="media-display">
+                        <!-- Photos and videos will be loaded here dynamically -->
+                    </div>
+                    
+                    <div class="media-caption">
+                        <h3 id="media-title">Loading...</h3>
+                        <p id="media-date"></p>
+                        <p id="media-description"></p>
+                    </div>
+                </div>
+                
+                <button class="nav-btn nav-next" id="next-btn">›</button>
+            </div>
+
+            <!-- Gesture Guide Overlay -->
+            <div id="gesture-guide" class="gesture-guide">
+                <div class="guide-content">
+                    <h3>Hand Gesture Controls</h3>
+                    <div class="gesture-list">
+                        <div class="gesture-item">
+                            <span class="gesture-icon">👉</span>
+                            <span class="gesture-name">Swipe Right</span>
+                            <span class="gesture-action">Next Photo</span>
+                        </div>
+                        <div class="gesture-item">
+                            <span class="gesture-icon">👈</span>
+                            <span class="gesture-name">Swipe Left</span>
+                            <span class="gesture-action">Previous Photo</span>
+                        </div>
+                        <div class="gesture-item">
+                            <span class="gesture-icon">✊</span>
+                            <span class="gesture-name">Fist/Pinch</span>
+                            <span class="gesture-action">Play/Pause Video</span>
+                        </div>
+                        <div class="gesture-item">
+                            <span class="gesture-icon">👍</span>
+                            <span class="gesture-name">Thumbs Up</span>
+                            <span class="gesture-action">Show Controls</span>
+                        </div>
+                    </div>
+                    <button id="close-guide-btn" class="btn btn-small">Got it!</button>
+                </div>
+            </div>
+
+            <!-- Video element hidden -->
+            <video id="hidden-webcam" style="display: none;"></video>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/game.js"></script>
+    <script src="js/gallery.js"></script>
+    <script src="js/gestures.js"></script>
+    <script src="js/media-data.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

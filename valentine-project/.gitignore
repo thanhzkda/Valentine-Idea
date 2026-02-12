@@ -1,0 +1,13 @@
+# Media files (you'll add your own)
+media/photos/*.jpg
+media/photos/*.png
+media/videos/*.mp4
+
+# But keep the directories
+!media/photos/.gitkeep
+!media/videos/.gitkeep
+
+# System files
+.DS_Store
+Thumbs.db
+*.swp
