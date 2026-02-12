@@ -5,119 +5,131 @@ class App {
         this.screens = {
             game: document.getElementById('game-screen'),
             transition: document.getElementById('transition-screen'),
+            heart: document.getElementById('heart-screen'),
             gallery: document.getElementById('gallery-screen')
         };
-        
+
         this.init();
     }
-    
+
     init() {
         // Listen for game victory
         document.addEventListener('gameWon', () => {
             this.showTransition();
         });
-        
-        // Unlock button
+
+        // Unlock button → show 3D heart scene
         const unlockBtn = document.getElementById('unlock-btn');
         unlockBtn.addEventListener('click', () => {
-            this.showGallery();
+            this.showHeartScene();
         });
-        
-        // Camera permission buttons
+
+        // Legacy camera permission buttons (for gallery fallback)
         const enableCameraBtn = document.getElementById('enable-camera-btn');
         const skipCameraBtn = document.getElementById('skip-camera-btn');
-        
-        enableCameraBtn.addEventListener('click', () => {
-            this.enableGestureControl();
-        });
-        
-        skipCameraBtn.addEventListener('click', () => {
-            this.skipGestureControl();
-        });
-        
+
+        if (enableCameraBtn) {
+            enableCameraBtn.addEventListener('click', () => {
+                this.enableGestureControl();
+            });
+        }
+
+        if (skipCameraBtn) {
+            skipCameraBtn.addEventListener('click', () => {
+                this.skipGestureControl();
+            });
+        }
+
         // Gesture guide close button
         const closeGuideBtn = document.getElementById('close-guide-btn');
-        closeGuideBtn.addEventListener('click', () => {
-            this.closeGestureGuide();
-        });
-        
+        if (closeGuideBtn) {
+            closeGuideBtn.addEventListener('click', () => {
+                this.closeGestureGuide();
+            });
+        }
+
         // Show initial screen
         this.showScreen('game');
-        
+
         console.log('Valentine\'s Day Experience initialized! 💕');
         console.log('Win the game to unlock the special surprise...');
     }
-    
+
     showScreen(screenName) {
         // Hide all screens
         Object.values(this.screens).forEach(screen => {
-            screen.classList.remove('active');
+            if (screen) screen.classList.remove('active');
         });
-        
+
         // Show requested screen
-        this.screens[screenName].classList.add('active');
+        if (this.screens[screenName]) {
+            this.screens[screenName].classList.add('active');
+        }
         this.currentScreen = screenName;
     }
-    
+
     showTransition() {
         this.showScreen('transition');
-        
-        // Add extra sparkle effects
         this.addSparkles();
     }
-    
+
+    showHeartScene() {
+        this.showScreen('heart');
+
+        // Initialize the 3D heart scene (defined in heart-scene.js)
+        if (typeof window.initHeartScene === 'function') {
+            window.initHeartScene();
+        }
+
+        // Play background music
+        const audio = document.getElementById('bg-music');
+        if (audio) {
+            audio.volume = 0.5;
+            audio.play().catch(e => console.log('Audio autoplay prevented:', e));
+        }
+    }
+
+    // Legacy gallery methods (kept as fallback)
     showGallery() {
         this.showScreen('gallery');
-        
-        // Initialize gallery if not already done
         initGallery();
-        
-        // Show camera permission notice
         const cameraNotice = document.getElementById('camera-notice');
-        cameraNotice.classList.remove('hidden');
+        if (cameraNotice) cameraNotice.classList.remove('hidden');
     }
-    
+
     async enableGestureControl() {
         const cameraNotice = document.getElementById('camera-notice');
-        cameraNotice.classList.add('hidden');
-        
-        // Initialize gesture recognizer
+        if (cameraNotice) cameraNotice.classList.add('hidden');
+
         if (!gestureRecognizer) {
             gestureRecognizer = new GestureRecognizer(gallery);
         }
-        
+
         const success = await gestureRecognizer.initialize();
-        
         if (success) {
-            // Show gesture guide
-            setTimeout(() => {
-                this.showGestureGuide();
-            }, 1000);
+            setTimeout(() => this.showGestureGuide(), 1000);
         }
     }
-    
+
     skipGestureControl() {
         const cameraNotice = document.getElementById('camera-notice');
-        cameraNotice.classList.add('hidden');
-        
-        // Show brief tutorial for keyboard controls
+        if (cameraNotice) cameraNotice.classList.add('hidden');
         alert('Keyboard Controls:\n\n← Left Arrow: Previous photo\n→ Right Arrow: Next photo\nSpace: Play/Pause video\n\nEnjoy the memories! ❤️');
     }
-    
+
     showGestureGuide() {
         const guide = document.getElementById('gesture-guide');
-        guide.classList.remove('hidden');
+        if (guide) guide.classList.remove('hidden');
     }
-    
+
     closeGestureGuide() {
         const guide = document.getElementById('gesture-guide');
-        guide.classList.add('hidden');
+        if (guide) guide.classList.add('hidden');
     }
-    
+
     addSparkles() {
-        // Add floating hearts animation
         const transitionScreen = this.screens.transition;
-        
+
         for (let i = 0; i < 20; i++) {
             setTimeout(() => {
                 const heart = document.createElement('div');
@@ -129,33 +141,21 @@ class App {
                 heart.style.opacity = '0';
                 heart.style.animation = `floatUp ${3 + Math.random() * 2}s ease-out`;
                 heart.style.pointerEvents = 'none';
-                
+
                 transitionScreen.appendChild(heart);
-                
                 setTimeout(() => heart.remove(), 5000);
             }, i * 100);
         }
-        
-        // Add CSS animation if not already present
+
         if (!document.getElementById('float-animation')) {
             const style = document.createElement('style');
             style.id = 'float-animation';
             style.textContent = `
                 @keyframes floatUp {
-                    0% {
-                        transform: translateY(0) rotate(0deg);
-                        opacity: 0;
-                    }
-                    10% {
-                        opacity: 1;
-                    }
-                    90% {
-                        opacity: 1;
-                    }
-                    100% {
-                        transform: translateY(-100vh) rotate(360deg);
-                        opacity: 0;
-                    }
+                    0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+                    10% { opacity: 1; }
+                    90% { opacity: 1; }
+                    100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
                 }
             `;
             document.head.appendChild(style);

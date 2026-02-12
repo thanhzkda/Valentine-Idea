@@ -11,8 +11,8 @@ class GestureRecognizer {
         // Gesture detection parameters
         this.previousHandX = null;
         this.swipeThreshold = 0.15; // 15% of screen width
-        this.gestureDebounceTime = 1000; // 1 second between gestures
-        this.lastGestureTime = 0;
+        this.gestureDebounceTime = 500; // 1 second between gestures
+        this.lastGestureTime = 500;
         
         // Hand state tracking
         this.isPinched = false;
