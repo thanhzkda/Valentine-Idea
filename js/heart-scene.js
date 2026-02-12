@@ -260,6 +260,24 @@ class Particle {
     update(dt, mode, focusTargetMesh) {
         let target = mode === 'SCATTER' ? this.posScatter : this.posHeart;
 
+        // ─── PHOTO ORBITAL LOGIC ───
+        if (this.type === 'PHOTO' && mode === 'HEART' && !focusTargetMesh) {
+            // Update orbital position
+            this.orbitAngle += this.orbitSpeed * dt * 0.5; // Rotate around
+            const bobbing = Math.sin(clock.elapsedTime * 2 + this.orbitOscillation) * 1.5;
+
+            this.posHeart.set(
+                Math.cos(this.orbitAngle) * this.orbitRadius,
+                this.orbitY + bobbing,
+                Math.sin(this.orbitAngle) * this.orbitRadius
+            );
+
+            // Look at center (heart) but stay upright
+            this.mesh.lookAt(0, this.posHeart.y, 0);
+            this.mesh.rotateY(Math.PI); // Adjust if backside is visible
+        }
+        // ───────────────────────────
+
         if (mode === 'FOCUS') {
             if (this.mesh === focusTargetMesh) {
                 const desiredWorldPos = new THREE.Vector3(0, 2, 35);
@@ -278,15 +296,10 @@ class Particle {
             this.mesh.rotation.x += this.spinSpeed.x * dt;
             this.mesh.rotation.y += this.spinSpeed.y * dt;
             this.mesh.rotation.z += this.spinSpeed.z * dt;
-        } else if (mode === 'HEART') {
-            if (this.type === 'PHOTO') {
-                this.mesh.lookAt(0, this.mesh.position.y, 0);
-                this.mesh.rotateY(Math.PI);
-            } else {
-                this.mesh.rotation.x = THREE.MathUtils.lerp(this.mesh.rotation.x, 0, dt);
-                this.mesh.rotation.z = THREE.MathUtils.lerp(this.mesh.rotation.z, 0, dt);
-                this.mesh.rotation.y += 0.5 * dt;
-            }
+        } else if (mode === 'HEART' && this.type !== 'PHOTO') {
+            this.mesh.rotation.x = THREE.MathUtils.lerp(this.mesh.rotation.x, 0, dt);
+            this.mesh.rotation.z = THREE.MathUtils.lerp(this.mesh.rotation.z, 0, dt);
+            this.mesh.rotation.y += 0.5 * dt;
         }
 
         if (mode === 'FOCUS' && this.mesh === focusTargetMesh) {
@@ -454,26 +467,32 @@ function updateSparkles() {
     sparkleSystem.geometry.attributes.position.needsUpdate = true;
 }
 
-// ─── PHOTO LAYOUT (helical around heart) ──────────────────────
+// ─── PHOTO LAYOUT & ORBITAL SYSTEM ────────────────────────────
 function updatePhotoLayout() {
     const photos = particleSystem.filter(p => p.type === 'PHOTO');
     const count = photos.length;
     if (count === 0) return;
 
-    const scale = CONFIG.particles.heartScale;
-    const loops = 2;
+    // Orbital parameters
+    const radius = 22; // Distance from heart center
 
     photos.forEach((p, i) => {
-        const t = (i + 0.5) / count;
-        const u = t;
-        const v = 0.3 + t * 0.4; // Stay in visible region of heart
+        // Distribute evenly in a circle (single row layout)
+        const angle = (i / count) * Math.PI * 2;
 
-        // Get position on heart surface, then push outward
-        const pos = heartPosition(u * loops, v, scale);
-        const dir = pos.clone().normalize();
-        pos.add(dir.multiplyScalar(3.0)); // Push photos outward from heart surface
+        // Base position on the ring
+        p.orbitAngle = angle; // Store initial angle
+        p.orbitRadius = radius;
+        p.orbitSpeed = 0.2 + Math.random() * 0.1; // Varied speed
+        p.orbitY = (Math.random() - 0.5) * 8; // Vertical spread (Multi-layered look)
+        p.orbitOscillation = Math.random() * Math.PI * 2; // Random phase for vertical bobbing
 
-        p.posHeart.copy(pos);
+        // Set initial position (will be updated in animation loop)
+        p.posHeart.set(
+            Math.cos(angle) * radius,
+            p.orbitY,
+            Math.sin(angle) * radius
+        );
     });
 }
 
@@ -665,6 +684,10 @@ async function initMediaPipe() {
 }
 
 let lastVideoTime = -1;
+// ─── GESTURE LOGIC EXTENDED ──────────────────────────────────
+let lastGestureHandX = 0;
+let gestureCooldown = 0;
+
 function predictWebcam() {
     if (video.currentTime !== lastVideoTime) {
         lastVideoTime = video.currentTime;
@@ -677,10 +700,13 @@ function predictWebcam() {
 }
 
 function processGestures(result) {
+    if (gestureCooldown > 0) gestureCooldown--;
+
     if (result.landmarks && result.landmarks.length > 0) {
         STATE.hand.detected = true;
         const lm = result.landmarks[0];
-        STATE.hand.x = (lm[9].x - 0.5) * 2;
+        const handX = lm[9].x; // Normalised 0-1
+        STATE.hand.x = (handX - 0.5) * 2;
         STATE.hand.y = (lm[9].y - 0.5) * 2;
 
         const wrist = lm[0];
@@ -698,6 +724,45 @@ function processGestures(result) {
         const pinchRatio = pinchDist / handSize;
 
         const debugInfo = document.getElementById('heart-debug-info');
+
+        // ─── VIEWER GESTURE CONTROL ───
+        if (viewerOpen) {
+            const currentHandX = lm[9].x;
+            const deltaX = currentHandX - lastGestureHandX;
+
+            // Swipe Detection (only if cooldown is 0)
+            if (gestureCooldown === 0) {
+                if (Math.abs(deltaX) > 0.05) { // Threshold
+                    if (deltaX > 0) { // Moved Right -> Prev (Mirror effect: Hand right = Prev)
+                        prevMedia();
+                        if (debugInfo) debugInfo.innerText = "Gesture: Previous (Swipe Right)";
+                    } else { // Moved Left -> Next
+                        nextMedia();
+                        if (debugInfo) debugInfo.innerText = "Gesture: Next (Swipe Left)";
+                    }
+                    gestureCooldown = 20; // Cooldown
+                }
+            }
+
+            // Fist to Close
+            if (extensionRatio < 1.0 && gestureCooldown === 0) {
+                closeMediaViewer();
+                if (debugInfo) debugInfo.innerText = "Gesture: Close Viewer (Fist)";
+                gestureCooldown = 40;
+            }
+
+            // Pinch to Play/Pause
+            if (pinchRatio < 0.25 && gestureCooldown === 0) {
+                toggleVideoPlay();
+                if (debugInfo) debugInfo.innerText = "Gesture: Play/Pause (Pinch)";
+                gestureCooldown = 40;
+            }
+
+            lastGestureHandX = currentHandX;
+            return; // Exit, don't trigger heart modes
+        }
+        // ──────────────────────────────
+
         if (debugInfo) debugInfo.innerText = `Gesture Detected: ${STATE.mode}`;
 
         if (extensionRatio < 1.0) {
@@ -717,6 +782,8 @@ function processGestures(result) {
             STATE.mode = 'SCATTER';
             STATE.focusTarget = null;
         }
+
+        lastGestureHandX = handX;
     } else {
         STATE.hand.detected = false;
     }
@@ -755,96 +822,112 @@ function setupEvents() {
     });
 }
 
-// ─── FULLSCREEN MEDIA VIEWER ──────────────────────────────────
+// ─── MEDIA VIEWER CONTROLS ────────────────────────────────────
+let currentMediaIndex = -1;
+let viewerOpen = false;
+
 function openMediaViewer(mediaItem) {
     const overlay = document.getElementById('media-viewer-overlay');
     if (!overlay) return;
 
-    // Clear previous
+    viewerOpen = true;
+    currentMediaIndex = window.mediaData.indexOf(mediaItem);
+    updateViewerContent(mediaItem);
+
+    overlay.classList.add('active');
+}
+
+function updateViewerContent(mediaItem) {
+    const overlay = document.getElementById('media-viewer-overlay');
     const wrapper = overlay.querySelector('.viewer-media-wrapper');
-    const flyingContainer = overlay.querySelector('.flying-media-container');
     const caption = overlay.querySelector('.viewer-caption');
+    const flyingContainer = overlay.querySelector('.flying-media-container');
+
     wrapper.innerHTML = '';
-    flyingContainer.innerHTML = '';
 
-    // Create main media element
+    // Media Element
+    let mediaEl;
     if (mediaItem.type === 'video') {
-        const vid = document.createElement('video');
-        vid.src = mediaItem.src;
-        vid.controls = true;
-        vid.autoplay = true;
-        vid.style.maxWidth = '85vw';
-        vid.style.maxHeight = '80vh';
-        vid.style.borderRadius = '12px';
-        wrapper.appendChild(vid);
+        mediaEl = document.createElement('video');
+        mediaEl.src = mediaItem.src;
+        mediaEl.controls = true;
+        mediaEl.autoplay = true;
+        mediaEl.loop = true;
+        mediaEl.style.maxWidth = '85vw';
+        mediaEl.style.maxHeight = '80vh';
+        mediaEl.style.borderRadius = '12px';
+        mediaEl.id = 'viewer-active-video';
     } else {
-        const img = document.createElement('img');
-        img.src = mediaItem.src;
-        img.alt = mediaItem.title;
-        wrapper.appendChild(img);
+        mediaEl = document.createElement('img');
+        mediaEl.src = mediaItem.src;
+        mediaEl.alt = mediaItem.title;
     }
+    wrapper.appendChild(mediaEl);
 
-    // Update caption
+    // Caption
     if (caption) {
         caption.querySelector('h3').textContent = mediaItem.title || '';
         caption.querySelector('.viewer-date').textContent = mediaItem.date || '';
         caption.querySelector('.viewer-desc').textContent = mediaItem.description || '';
     }
 
-    // Create flying background photos
-    if (window.mediaData) {
-        window.mediaData.forEach((item, index) => {
-            if (item === mediaItem) return; // Skip the focused one
+    // Flying Background (Re-generate only if needed or keep static? Let's regenerate for effect)
+    flyingContainer.innerHTML = '';
+    window.mediaData.forEach((item) => {
+        if (item === mediaItem) return;
+        const flyEl = document.createElement('div');
+        flyEl.className = 'flying-media-item';
+        const size = 60 + Math.random() * 80;
+        flyEl.style.width = size + 'px';
+        flyEl.style.height = size + 'px';
+        flyEl.style.top = (10 + Math.random() * 75) + '%';
+        flyEl.style.setProperty('--fly-duration', (15 + Math.random() * 20) + 's');
+        flyEl.style.setProperty('--fly-delay', (-Math.random() * 35) + 's');
 
-            const flyEl = document.createElement('div');
-            flyEl.className = 'flying-media-item';
-
-            const size = 60 + Math.random() * 80;
-            flyEl.style.width = size + 'px';
-            flyEl.style.height = size + 'px';
-            flyEl.style.top = (10 + Math.random() * 75) + '%';
-            flyEl.style.setProperty('--fly-duration', (15 + Math.random() * 20) + 's');
-            flyEl.style.setProperty('--fly-delay', (-Math.random() * 35) + 's');
-            flyEl.style.setProperty('--fly-rotate', ((Math.random() - 0.5) * 20) + 'deg');
-
-            if (item.type === 'video') {
-                const vid = document.createElement('video');
-                vid.src = item.src;
-                vid.muted = true;
-                vid.autoplay = true;
-                vid.loop = true;
-                vid.playsInline = true;
-                flyEl.appendChild(vid);
-            } else {
-                const img = document.createElement('img');
-                img.src = item.thumbnail || item.src;
-                img.alt = item.title || '';
-                flyEl.appendChild(img);
-            }
-
-            flyingContainer.appendChild(flyEl);
-        });
-    }
-
-    overlay.classList.add('active');
+        const thumb = document.createElement('img');
+        thumb.src = item.thumbnail || item.src;
+        flyEl.appendChild(thumb);
+        flyingContainer.appendChild(flyEl);
+    });
 }
 
 function closeMediaViewer() {
     const overlay = document.getElementById('media-viewer-overlay');
     if (!overlay) return;
 
-    // Pause any playing video
-    const vid = overlay.querySelector('.viewer-media-wrapper video');
+    // Pause video
+    const vid = overlay.querySelector('video');
     if (vid) vid.pause();
 
-    // Pause flying videos
-    overlay.querySelectorAll('.flying-media-container video').forEach(v => v.pause());
-
     overlay.classList.remove('active');
+    viewerOpen = false;
 }
 
-// Expose close function globally
+// Navigation Helpers for Gestures
+function nextMedia() {
+    if (!window.mediaData || window.mediaData.length === 0) return;
+    currentMediaIndex = (currentMediaIndex + 1) % window.mediaData.length;
+    updateViewerContent(window.mediaData[currentMediaIndex]);
+}
+
+function prevMedia() {
+    if (!window.mediaData || window.mediaData.length === 0) return;
+    currentMediaIndex = (currentMediaIndex - 1 + window.mediaData.length) % window.mediaData.length;
+    updateViewerContent(window.mediaData[currentMediaIndex]);
+}
+
+function toggleVideoPlay() {
+    const vid = document.getElementById('viewer-active-video');
+    if (vid) {
+        if (vid.paused) vid.play();
+        else vid.pause();
+    }
+}
+
+// Expose globally
 window.closeMediaViewer = closeMediaViewer;
+window.nextMedia = nextMedia;
+window.prevMedia = prevMedia;
 
 // ─── ANIMATION LOOP ──────────────────────────────────────────
 function animate() {
