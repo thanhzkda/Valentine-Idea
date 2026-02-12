@@ -62,17 +62,21 @@ window.mediaData = [
 
 ### Step 3: Add MediaPipe (for Gesture Control)
 
-Add this script to your `<head>` in `index.html` (before the closing `</head>` tag):
+Ensure your `index.html` has the correct Import Map for Three.js and MediaPipe Tasks Vision (already included in the provided `index.html`):
 
 ```html
-<!-- MediaPipe Hands -->
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+<!-- Three.js + MediaPipe import map -->
+<script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+            "@mediapipe/tasks-vision": "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/+esm"
+        }
+    </script>
 ```
 
-Then uncomment the MediaPipe integration code in `js/gestures.js` (look for the `setupMediaPipe()` function).
+The gesture logic is handled automatically in `js/heart-scene.js`. No manual script uncommenting is required.
 
 ### Step 4: Test Locally
 
@@ -144,10 +148,17 @@ http-server
 - `Space`: Play/Pause video
 
 ### Gesture Controls (with camera enabled)
-- **Swipe Right** →: Next photo
-- **Swipe Left** ←: Previous photo
-- **Pinch/Fist** ✊: Play/Pause video
-- **Thumbs Up** 👍: Show gesture guide
+
+**In Heart Scene:**
+- **Open Palm** 🖐️: Scatter particles (Explode)
+- **Fist** ✊: Assemble Heart shape
+- **Pinch** 🤏: Focus on a random photo
+
+**In Media Viewer (when photo is open):**
+- **Swipe Left** ←: Next photo
+- **Swipe Right** →: Previous photo
+- **Pinch** 🤏: Play/Pause video
+- **Fist** ✊: Close the viewer
 
 ## 🔧 Customization
 
@@ -165,7 +176,7 @@ Edit `css/styles.css`:
 Edit `js/game.js` → `findBestMove()` function to make AI easier/harder.
 
 ### Add More Gestures
-Edit `js/gestures.js` → Add new detection functions.
+Edit `js/heart-scene.js` → Add new detection logic in `processGestures()`.
 
 ## 🐛 Troubleshooting
 
@@ -220,13 +231,14 @@ Edit `js/gestures.js` → Add new detection functions.
 - ✅ Tic-tac-toe game (working)
 - ✅ Gallery structure (working)
 - ✅ Keyboard navigation (working)
-- ⚠️ Gesture recognition (needs MediaPipe integration)
+- ⚠️ Gesture recognition (integrated in `heart-scene.js`, needs HTTPS)
 - ⏳ Your media files (need to be added)
 
 ## 🚀 Next Steps for You
 
 1. **Today**: Add your photos/videos
-2. **Tomorrow**: Integrate MediaPipe and test gestures
+2. **Tomorrow**: Test gesture controls
+
 3. **Day 3**: Fine-tune gesture sensitivity
 4. **Day 4**: Deploy to hosting
 5. **Before Feb 14**: Test with different lighting conditions
