@@ -166,13 +166,13 @@ function setupLights() {
     innerLight.position.set(0, 2, 0);
     mainGroup.add(innerLight);
 
-    const spotPink = new THREE.SpotLight(0xff88aa, 1000);
+    const spotPink = new THREE.SpotLight(0xff88aa, 500); // Reduced intensity
     spotPink.position.set(25, 35, 35);
     spotPink.angle = 0.5;
     spotPink.penumbra = 0.5;
     scene.add(spotPink);
 
-    const spotBlue = new THREE.SpotLight(0x8888ff, 600);
+    const spotBlue = new THREE.SpotLight(0x8888ff, 300); // Reduced intensity
     spotBlue.position.set(-25, 15, -25);
     scene.add(spotBlue);
 
@@ -515,9 +515,9 @@ function updatePhotoLayout() {
 function addPhotoToScene(texture, mediaItem) {
     const frameGeo = new THREE.BoxGeometry(1.4, 1.4, 0.05);
     const frameMat = new THREE.MeshStandardMaterial({
-        color: CONFIG.colors.gold,
-        metalness: 1.0,
-        roughness: 0.1,
+        color: 0x8a7833, // Even darker gold
+        metalness: 0.5,  // Less metallic
+        roughness: 0.6,  // More matte (rough)
     });
     const frame = new THREE.Mesh(frameGeo, frameMat);
 
@@ -605,6 +605,49 @@ function setupTouchAndClick() {
         STATE.touch.active = false;
     });
 
+    setupClickEventsOnly();
+}
+
+// Helper: Raycast from normalized coord (-1 to 1)
+function attemptClickFromGesture(ndcX, ndcY) {
+    // Note: MediaPipe Y is top-down (0->1), so ndcY is -1(top) to 1(bottom).
+    // Three.js expects Y to be 1(top) to -1(bottom).
+    // Video is mirrored (scaleX(-1)), so raw X(0) is Screen Right.
+    // STATE.hand.x = (0-0.5)*2 = -1. We want +1. So negate X too.
+
+    mouse.x = -ndcX;
+    mouse.y = -ndcY;
+
+    raycaster.setFromCamera(mouse, camera);
+
+    const intersects = raycaster.intersectObjects(mainGroup.children, true);
+    let clickedPhoto = null;
+
+    for (let hit of intersects) {
+        let obj = hit.object;
+        while (obj.parent && obj.parent !== mainGroup && obj.parent !== photoMeshGroup) {
+            obj = obj.parent;
+        }
+        const particle = particleSystem.find(p => p.mesh === obj && p.type === 'PHOTO');
+        if (particle) {
+            clickedPhoto = particle;
+            break;
+        }
+    }
+
+    if (clickedPhoto) {
+        const mediaItem = clickedPhoto.mesh.userData.mediaItem;
+        if (mediaItem) {
+            openMediaViewer(mediaItem);
+            return true;
+        }
+    }
+    return false;
+}
+
+function setupClickEventsOnly() {
+    const container = document.getElementById('heart-canvas-container');
+
     // Click on photo
     container.addEventListener('click', (e) => {
         const moveDist = Math.hypot(e.clientX - STATE.touch.startX, e.clientY - STATE.touch.startY);
@@ -645,6 +688,36 @@ function setupTouchAndClick() {
             }
         }
     });
+
+    // Keyboard Navigation for Media Viewer
+    window.addEventListener('keydown', (e) => {
+        if (viewerOpen) {
+            if (e.key === 'ArrowRight') nextMedia();
+            if (e.key === 'ArrowLeft') prevMedia();
+            if (e.key === 'Escape') closeMediaViewer();
+        }
+    });
+
+    // Touch Swipe for Media Viewer
+    const overlay = document.getElementById('media-viewer-overlay');
+    let touchStartX = 0;
+
+    if (overlay) {
+        overlay.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        overlay.addEventListener('touchend', (e) => {
+            if (!viewerOpen) return;
+            const touchEndX = e.changedTouches[0].screenX;
+            const diff = touchEndX - touchStartX;
+
+            if (Math.abs(diff) > 50) { // Threshold
+                if (diff > 0) prevMedia(); // Swipe Right -> Show Previous
+                else nextMedia(); // Swipe Left -> Show Next
+            }
+        }, { passive: true });
+    }
 
     // Double-tap to toggle scatter
     let lastTap = 0;
@@ -748,6 +821,16 @@ function processGestures(result) {
 
         const debugInfo = document.getElementById('heart-debug-info');
 
+        // Calculate Finger Extensions (Tip distance from wrist vs Hand Size)
+        const iExt = Math.hypot(lm[8].x - wrist.x, lm[8].y - wrist.y) / handSize;
+        const mExt = Math.hypot(lm[12].x - wrist.x, lm[12].y - wrist.y) / handSize;
+        const rExt = Math.hypot(lm[16].x - wrist.x, lm[16].y - wrist.y) / handSize;
+        const pExt = Math.hypot(lm[20].x - wrist.x, lm[20].y - wrist.y) / handSize;
+
+        // Check for Pointing Gesture (Index Extended, others Curled)
+        // Usually extended is > 1.2, curled is < 1.0 approx
+        const isPointing = (iExt > 1.3 && mExt < 1.1 && rExt < 1.1 && pExt < 1.1);
+
         // ─── VIEWER GESTURE CONTROL ───
         if (viewerOpen) {
             const currentHandX = lm[9].x;
@@ -788,12 +871,22 @@ function processGestures(result) {
 
         if (debugInfo) debugInfo.innerText = `Gesture Detected: ${STATE.mode}`;
 
-        if (extensionRatio < 1.0) {
+        // ☝️ Pointing = Click
+        if (isPointing) {
+            const clicked = attemptClickFromGesture(STATE.hand.x, STATE.hand.y);
+            if (clicked) {
+                if (debugInfo) debugInfo.innerText = "Gesture: Clicked Photo! (Point)";
+                gestureCooldown = 40;
+            } else {
+                if (debugInfo) debugInfo.innerText = "Pointing (No Photo)";
+            }
+        }
+        else if (extensionRatio < 1.0) {
             // ✊ Fist = Assemble Heart
             STATE.mode = 'HEART';
             STATE.focusTarget = null;
         } else if (pinchRatio < 0.25) {
-            // 🤏 Pinch = Focus / Zoom
+            // 🤏 Pinch = Focus (Zoom) Only, not Click
             if (STATE.mode !== 'FOCUS') {
                 STATE.mode = 'FOCUS';
                 const photos = particleSystem.filter(p => p.type === 'PHOTO');
