@@ -108,6 +108,7 @@ function heartPosition(u, v, scale) {
 
 // ─── INIT ─────────────────────────────────────────────────────
 function init() {
+    console.log("%c Heart Scene v2.0: Multi-Axis & Closer Orbit", "background: #ff0055; color: white; padding: 4px; border-radius: 4px;");
     initThree();
     setupEnvironment();
     setupLights();
@@ -262,19 +263,15 @@ class Particle {
 
         // ─── PHOTO ORBITAL LOGIC ───
         if (this.type === 'PHOTO' && mode === 'HEART' && !focusTargetMesh) {
-            // Update orbital position
-            this.orbitAngle += this.orbitSpeed * dt * 0.5; // Rotate around
-            const bobbing = Math.sin(clock.elapsedTime * 2 + this.orbitOscillation) * 1.5;
+            // Update orbital position around arbitrary axis
+            this.orbitAngle += this.orbitSpeed * dt * 0.8;
 
-            this.posHeart.set(
-                Math.cos(this.orbitAngle) * this.orbitRadius,
-                this.orbitY + bobbing,
-                Math.sin(this.orbitAngle) * this.orbitRadius
-            );
+            // Rotate the start vector around the axis
+            const currentPos = this.startVector.clone().applyAxisAngle(this.orbitAxis, this.orbitAngle);
+            this.posHeart.copy(currentPos);
 
-            // Look at center (heart) but stay upright
-            this.mesh.lookAt(0, this.posHeart.y, 0);
-            this.mesh.rotateY(Math.PI); // Adjust if backside is visible
+            // Look at center (heart)
+            this.mesh.lookAt(0, 0, 0);
         }
         // ───────────────────────────
 
@@ -473,26 +470,44 @@ function updatePhotoLayout() {
     const count = photos.length;
     if (count === 0) return;
 
-    // Orbital parameters
-    const radius = 22; // Distance from heart center
+    // Reduced radius to bring them closer (was 22)
+    const radius = 14;
 
     photos.forEach((p, i) => {
-        // Distribute evenly in a circle (single row layout)
+        // Distribute initial angles
         const angle = (i / count) * Math.PI * 2;
 
-        // Base position on the ring
-        p.orbitAngle = angle; // Store initial angle
-        p.orbitRadius = radius;
-        p.orbitSpeed = 0.2 + Math.random() * 0.1; // Varied speed
-        p.orbitY = (Math.random() - 0.5) * 8; // Vertical spread (Multi-layered look)
-        p.orbitOscillation = Math.random() * Math.PI * 2; // Random phase for vertical bobbing
+        p.orbitAngle = angle;
+        p.orbitSpeed = 0.3 + Math.random() * 0.2;
 
-        // Set initial position (will be updated in animation loop)
-        p.posHeart.set(
-            Math.cos(angle) * radius,
-            p.orbitY,
-            Math.sin(angle) * radius
-        );
+        // Assign varied orbital axes
+        // Pattern: 0=Horizontal(Y), 1=Vertical(X), 2=Diagonal/Random
+        const type = i % 3;
+
+        let axis, startVec;
+
+        if (type === 0) {
+            // Standard Horizontal Orbit (around Y axis)
+            axis = new THREE.Vector3(0, 1, 0);
+            startVec = new THREE.Vector3(radius, (Math.random() - 0.5) * 4, 0); // Slight Y offset
+        } else if (type === 1) {
+            // Vertical Orbit (around X axis)
+            axis = new THREE.Vector3(1, 0, 0);
+            startVec = new THREE.Vector3(0, radius, (Math.random() - 0.5) * 4);
+        } else {
+            // Diagonal / Random Axis
+            axis = new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize();
+            // Start vector must be perpendicular to axis
+            startVec = new THREE.Vector3(1, 0, 0);
+            if (Math.abs(axis.x) > 0.9) startVec.set(0, 1, 0);
+            startVec.cross(axis).normalize().multiplyScalar(radius);
+        }
+
+        p.orbitAxis = axis;
+        p.startVector = startVec;
+
+        // Set initial position
+        p.posHeart.copy(p.startVector.clone().applyAxisAngle(p.orbitAxis, p.orbitAngle));
     });
 }
 

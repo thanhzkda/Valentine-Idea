@@ -41,12 +41,19 @@ window.mediaData = [
         title: 'Arcade Winner',
         date: '2025-09-05',
         description: 'So happy with the prize! A fun day full of games and laughter.'
-    }
-    ,
+    },
     {
         type: 'video',
         thumbnail: 'media/photos/photo2.jpg',
         src: 'media/videos/video2.mp4',
+        title: 'Arcade Winner',
+        date: '2025-09-05',
+        description: 'So happy with the prize! A fun day full of games and laughter.'
+    },
+    {
+        type: 'video',
+        thumbnail: 'media/photos/14.jpeg',
+        src: 'media/videos/142.mp4',
         title: 'Arcade Winner',
         date: '2025-09-05',
         description: 'So happy with the prize! A fun day full of games and laughter.'
