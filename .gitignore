@@ -1,7 +1,7 @@
-# Media files (you'll add your own)
-media/photos/*.jpg
-media/photos/*.png
-media/videos/*.mp4
+# Media files are now allowed
+# media/photos/*.jpg
+# media/photos/*.png
+# media/videos/*.mp4
 
 # But keep the directories
 !media/photos/.gitkeep
