@@ -42,6 +42,15 @@ window.mediaData = [
         date: '2025-09-05',
         description: 'So happy with the prize! A fun day full of games and laughter.'
     }
+    ,
+    {
+        type: 'video',
+        thumbnail: 'media/photos/photo2.jpg',
+        src: 'media/videos/video2.mp4',
+        title: 'Arcade Winner',
+        date: '2025-09-05',
+        description: 'So happy with the prize! A fun day full of games and laughter.'
+    }
 ];
 
 // Note: Ensure you save your 5 images as photo1.jpg through photo5.jpg in the media/photos/ folder based on the order above.
