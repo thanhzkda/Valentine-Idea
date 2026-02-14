@@ -1,101 +1,42 @@
-// Media Data - Replace with your actual photos and videos
 window.mediaData = [
     {
         type: 'image',
         src: 'media/photos/photo1.jpg',
-        title: 'Our First Date',
-        date: 'January 14, 2025',
-        description: 'The day we met at that little coffee shop downtown. I knew you were special from the moment I saw you smile.'
+        title: 'Us Together',
+        date: '2025-02-14',
+        description: 'Just the two of us perfectly happy together.'
     },
     {
         type: 'image',
-        src: 'https://picsum.photos/seed/love2/800/600',
-        thumbnail: 'https://picsum.photos/seed/love2/400/300',
-        title: 'Beach Sunset',
-        date: 'February 28, 2025',
-        description: 'Watching the sunset together at the beach. One of my favorite memories with you.'
+        src: 'media/photos/photo2.jpg',
+        title: 'Leaning On You',
+        date: '2025-03-20',
+        description: 'Always feeling safe and loved right by your side.'
     },
     {
         type: 'image',
-        src: 'https://picsum.photos/seed/love3/800/600',
-        thumbnail: 'https://picsum.photos/seed/love3/400/300',
-        title: 'Rainy Day Walk',
-        date: 'March 15, 2025',
-        description: 'Remember when we got caught in the rain? We danced anyway!'
+        src: 'media/photos/photo3.jpg',
+        title: 'Flower Field Day',
+        date: '2025-05-15',
+        description: 'Surrounded by beautiful tulips, but you represent the most beautiful bloom.'
     },
     {
         type: 'image',
-        src: 'https://picsum.photos/seed/love4/800/600',
-        thumbnail: 'https://picsum.photos/seed/love4/400/300',
-        title: 'Mountain Adventure',
-        date: 'April 22, 2025',
-        description: 'Our hiking trip to the mountains. We conquered that peak together!'
+        src: 'media/photos/photo4.jpg',
+        title: 'New Ride Adventures',
+        date: '2025-08-10',
+        description: 'Pose with the new car! Ready for many more road trips together.'
     },
     {
         type: 'image',
-        src: 'https://picsum.photos/seed/love5/800/600',
-        thumbnail: 'https://picsum.photos/seed/love5/400/300',
-        title: 'Cooking Together',
-        date: 'May 10, 2025',
-        description: 'That time we tried to make pasta from scratch. What a delicious mess!'
-    },
-    {
-        type: 'image',
-        src: 'https://picsum.photos/seed/love6/800/600',
-        thumbnail: 'https://picsum.photos/seed/love6/400/300',
-        title: 'Your Birthday Surprise',
-        date: 'June 8, 2025',
-        description: 'Your reaction when you walked into your surprise party. Priceless!'
-    },
-    {
-        type: 'image',
-        src: 'https://picsum.photos/seed/love7/800/600',
-        thumbnail: 'https://picsum.photos/seed/love7/400/300',
-        title: 'Summer Festival',
-        date: 'July 4, 2025',
-        description: 'Fireworks and fun at the summer festival. You looked so beautiful that night.'
-    },
-    {
-        type: 'image',
-        src: 'https://picsum.photos/seed/love8/800/600',
-        thumbnail: 'https://picsum.photos/seed/love8/400/300',
-        title: 'Lazy Sunday Morning',
-        date: 'August 15, 2025',
-        description: 'Just being comfortable together. These simple moments mean everything.'
-    },
-    {
-        type: 'image',
-        src: 'https://picsum.photos/seed/love9/800/600',
-        thumbnail: 'https://picsum.photos/seed/love9/400/300',
-        title: 'Fall Leaves',
-        date: 'October 20, 2025',
-        description: 'Walking through the park as the leaves changed colors. Perfect autumn day.'
-    },
-    {
-        type: 'image',
-        src: 'https://picsum.photos/seed/love10/800/600',
-        thumbnail: 'https://picsum.photos/seed/love10/400/300',
-        title: 'Holiday Lights',
-        date: 'December 15, 2025',
-        description: 'Exploring the Christmas light displays together. Magic everywhere!'
-    },
-    {
-        type: 'image',
-        src: 'https://picsum.photos/seed/love11/800/600',
-        thumbnail: 'https://picsum.photos/seed/love11/400/300',
-        title: 'New Year\'s Kiss',
-        date: 'January 1, 2026',
-        description: 'Starting the new year together. Here\'s to many more years to come!'
-    },
-    {
-        type: 'image',
-        src: 'https://picsum.photos/seed/love12/800/600',
-        thumbnail: 'https://picsum.photos/seed/love12/400/300',
-        title: 'Today',
-        date: 'February 14, 2026',
-        description: 'Happy Valentine\'s Day, my love! Every day with you is a gift. I love you more than words can express. ❤️'
+        src: 'media/photos/photo5.jpg',
+        title: 'Arcade Winner',
+        date: '2025-09-05',
+        description: 'So happy with the prize! A fun day full of games and laughter.'
     }
 ];
+
+// Note: Ensure you save your 5 images as photo1.jpg through photo5.jpg in the media/photos/ folder based on the order above.
 
 /*
 INSTRUCTIONS FOR ADDING YOUR OWN MEDIA:
