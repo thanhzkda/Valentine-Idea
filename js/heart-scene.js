@@ -535,9 +535,11 @@ function addPhotoToScene(texture, mediaItem) {
 }
 
 // ─── LOAD MEDIA FROM window.mediaData ─────────────────────────
+// ─── LOAD MEDIA FROM window.mediaData ─────────────────────────
 function loadMediaPhotos() {
     if (!window.mediaData || window.mediaData.length === 0) return;
     const loader = new THREE.TextureLoader();
+    let errorCount = 0;
 
     window.mediaData.forEach((item) => {
         const imgSrc = item.thumbnail || item.src;
@@ -550,6 +552,12 @@ function loadMediaPhotos() {
             undefined,
             (err) => {
                 console.warn(`Failed to load thumbnail for "${item.title}":`, err);
+                errorCount++;
+                const debugInfo = document.getElementById('heart-debug-info');
+                if (debugInfo) {
+                    debugInfo.innerText = `⚠️ Error: Could not load ${errorCount} photo(s). Check filenames!`;
+                    debugInfo.style.color = '#ff4444';
+                }
             }
         );
     });
