@@ -23,7 +23,7 @@ class TicTacToe {
         });
         
         this.resetBtn.addEventListener('click', () => this.resetGame());
-        this.updateStatus("Your turn! Place a ❤️");
+        this.updateStatus("Tới lượt em đó! Cho anh một ❤️ đi, năn nỉii");
     }
     
     handleCellClick(event) {
@@ -140,7 +140,7 @@ class TicTacToe {
             });
             
             if (winner === 'heart') {
-                this.updateStatus("🎉 You Won! 🎉");
+                this.updateStatus("🎉 Giỏi quá! Bé thắng rồi nè 🎉");
                 this.gameActive = false;
                 
                 // Trigger transition to gallery after celebration
@@ -148,7 +148,7 @@ class TicTacToe {
                     this.triggerVictory();
                 }, 2000);
             } else {
-                this.updateStatus("Computer wins! Try again 💪");
+                this.updateStatus("Awww! Ráng thử lại lần nữa ii, sắp thắng gòi 💪\nHint nhé: 3 góc là thắng đóoo");
                 this.gameActive = false;
             }
             return;
@@ -157,7 +157,7 @@ class TicTacToe {
         // Check for draw
         const roundDraw = !this.board.includes('');
         if (roundDraw) {
-            this.updateStatus("It's a draw! Try again 🤝");
+            this.updateStatus("Hòa rùi, chơi lại ii 🤝");
             this.gameActive = false;
             return;
         }
@@ -165,7 +165,7 @@ class TicTacToe {
         // Continue game
         this.currentPlayer = this.currentPlayer === 'heart' ? 'x' : 'heart';
         if (this.currentPlayer === 'heart') {
-            this.updateStatus("Your turn! Place a ❤️");
+            this.updateStatus("Tới lượt em đó! Đi iii");
         }
     }
     
@@ -183,7 +183,7 @@ class TicTacToe {
             cell.classList.remove('taken', 'winner');
         });
         
-        this.updateStatus("Your turn! Place a ❤️");
+        this.updateStatus("Cho anh một ❤️ đi");
     }
     
     triggerVictory() {

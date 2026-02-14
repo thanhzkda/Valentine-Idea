@@ -51,8 +51,8 @@ class App {
         // Show initial screen
         this.showScreen('game');
 
-        console.log('Valentine\'s Day Experience initialized! 💕');
-        console.log('Win the game to unlock the special surprise...');
+        console.log('Valentine\'s Day Lil gift for Bae 💕');
+        console.log('Ráng chơi thắng đi rồi anh tặng quà cho nha, quà thiệt luôn, hứa á..');
     }
 
     showScreen(screenName) {
