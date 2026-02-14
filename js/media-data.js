@@ -2,8 +2,7 @@
 window.mediaData = [
     {
         type: 'image',
-        src: 'https://picsum.photos/seed/love1/800/600',
-        thumbnail: 'https://picsum.photos/seed/love1/400/300',
+        src: 'media/photos/photo1.jpg',
         title: 'Our First Date',
         date: 'January 14, 2025',
         description: 'The day we met at that little coffee shop downtown. I knew you were special from the moment I saw you smile.'
